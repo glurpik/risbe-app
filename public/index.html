@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RisBe - Твой путь к общению</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="screen-auth" class="card">
+        <h1>RisBe</h1>
+        <div class="input-group">
+            <input type="text" id="login-user" placeholder="Твой ник">
+            <input type="password" id="login-pass" placeholder="Пароль">
+        </div>
+        <button onclick="handleAuth('login')">Войти</button>
+        <button onclick="handleAuth('register')" class="btn-alt">Регистрация</button>
+    </div>
+
+    <div id="screen-feed" class="card hidden">
+        <div class="header">
+            <span id="my-nick"></span>
+            <button onclick="logout()" class="btn-small">Выход</button>
+        </div>
+        <h2>Найди пару</h2>
+        <div id="user-list" class="user-grid">
+            </div>
+    </div>
+
+    <div id="screen-chat" class="card hidden">
+        <div class="header">
+            <button onclick="showScreen('feed')" class="btn-small">← Назад</button>
+            <h3 id="chat-with-title">Чат</h3>
+        </div>
+        <div id="chat-window"></div>
+        <div class="chat-input">
+            <input type="text" id="chat-msg" placeholder="Напиши что-нибудь...">
+            <button onclick="sendPrivateMsg()">🚀</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+:root {
+    --primary: #ff4b2b;
+    --secondary: #ff416c;
+    --bg: #0f0c29;
+}
+
+body {
+    background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 350px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+    border: 1px solid rgba(255,255,255,0.18);
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    outline: none;
+}
+
+input::placeholder { color: #ddd; }
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover { transform: scale(1.05); }
+
+.hidden { display: none; }
+
+#chat-window {
+    height: 350px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.msg-own { align-self: flex-end; background: #ff4b2b; padding: 8px 12px; border-radius: 15px 15px 0 15px; max-width: 80%; }
+.msg-partner { align-self: flex-start; background: #444; padding: 8px 12px; border-radius: 15px 15px 15px 0; max-width: 80%; }
+
+.chat-input { display: flex; gap: 5px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 14px; }
+.btn-small { width: auto; padding: 5px 10px; margin: 0; font-size: 12px; }
+.user-grid { display: flex; flex-direction: column; gap: 10px; }
+
+/* Добавь это к предыдущим стилям */
+.user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.user-card span { font-weight: bold; font-size: 1.1em; }
+.user-card button { width: auto; margin: 0; padding: 8px 15px; background: #28a745; }
+
+#chat-window {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
