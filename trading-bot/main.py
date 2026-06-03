@@ -31,6 +31,7 @@ from trading.wallet import get_balance_matic, get_address
 from modes.confirm_mode import run_confirm_cycle
 from modes.auto_mode import run_auto_cycle
 from modes.risky_mode import run_risky_cycle
+from notifications.telegram_bot import start_bot, stop_bot, state as tg_state
 
 console = Console()
 
@@ -268,6 +269,11 @@ async def main():
     t.start()
     console.print("[dim]Dashboard: http://localhost:8080[/dim]")
 
+    # Start Telegram bot
+    tg_bot = await start_bot()
+    if tg_bot:
+        console.print("[dim]Telegram bot: активен[/dim]")
+
     wallet_addr = get_address()
     balance = get_balance_matic()
     console.print(f"Wallet: [dim]{wallet_addr}[/dim]  Balance: [yellow]{balance:.4f} MATIC[/yellow]\n")
@@ -290,3 +296,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         console.print("\n[dim]Bot stopped.[/dim]")
+    finally:
+        asyncio.run(stop_bot())
