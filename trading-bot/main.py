@@ -22,6 +22,8 @@ from news.aggregator import fetch_all_news
 from ai.knowledge_base import add_articles, load_documents
 from ai.analyzer import analyze_market
 from ai.calibrator import calibrate
+from ai.market_filter import filter_market
+from ai.learning import log_decision, extract_lessons
 from trading.polymarket import get_active_markets
 from trading.wallet import get_balance_matic, get_address
 from modes.confirm_mode import run_confirm_cycle
@@ -58,22 +60,55 @@ async def run_cycle(auto_mode: bool):
     add_articles(articles)
 
     # 3. Get markets
-    markets = get_active_markets(limit=10)
-    console.print(f"[cyan]Analyzing {len(markets)} Polymarket markets…[/cyan]")
+    markets = get_active_markets(limit=20)
 
-    # 4. Analyze each market
+    # 4. Filter bad markets before spending API tokens
+    passed, skipped_count = [], 0
+    for m in markets:
+        f = filter_market(m.question, m.volume, m.yes_price)
+        if f.passed:
+            passed.append((m, f))
+        else:
+            skipped_count += 1
+            log_decision(m.id, m.question, False, None, None, None, None,
+                         m.yes_price, None, None, False, f.reason, [], False)
+
+    console.print(
+        f"[cyan]Markets:[/cyan] {len(passed)} passed filter, "
+        f"[dim]{skipped_count} rejected (hype/thin/extreme)[/dim]"
+    )
+
+    # 5. Analyze filtered markets
     signals = []
-    for market in markets:
+    for market, flt in passed:
         sig = await analyze_market(
             market_id=market.id,
             question=market.question,
             current_yes_price=market.yes_price,
             articles=articles,
         )
+        log_decision(
+            market_id=market.id,
+            question=market.question,
+            signal_generated=sig is not None,
+            side=sig.side if sig else None,
+            confidence=sig.confidence if sig else None,
+            base_rate=sig.base_rate if sig else None,
+            my_estimate=sig.my_estimate if sig else None,
+            market_price=market.yes_price,
+            edge=sig.edge if sig else None,
+            reasoning=sig.reasoning if sig else None,
+            filter_passed=True,
+            filter_reason=flt.reason,
+            news_headlines=[a.title for a in articles[:5]],
+            trade_executed=False,  # updated by executor
+        )
         if sig:
             signals.append(sig)
 
-    # 5. Execute
+    console.print(f"[cyan]Signals:[/cyan] {len(signals)} actionable (skipped {len(passed)-len(signals)} low-edge)")
+
+    # 6. Execute
     if auto_mode:
         await run_auto_cycle(signals)
     else:
@@ -133,6 +168,23 @@ async def cmd_calibrate():
         rprint(f"[yellow]{result['reason']}[/yellow]")
 
 
+async def cmd_learn():
+    console.print("[cyan]Running self-learning session (DeepSeek R1)…[/cyan]")
+    result = await extract_lessons()
+    if result.get("status") == "need_more_data":
+        rprint(f"[yellow]Not enough data yet: {result['have']}/{result['need']} resolved trades[/yellow]")
+        return
+    console.print(f"\n[bold]Win rate:[/bold] {result['summary']['win_rate']:.0%}  "
+                  f"PnL: ${result['summary']['total_pnl']:.2f}")
+    console.print(f"\n[bold green]Lessons extracted and saved to knowledge base:[/bold green]")
+    for i, lesson in enumerate(result.get("lessons", []), 1):
+        rprint(f"  {i}. {lesson}")
+    if result.get("key_insight"):
+        rprint(f"\n[bold yellow]Key insight:[/bold yellow] {result['key_insight']}")
+    if result.get("recommended_threshold"):
+        rprint(f"[bold]Recommended threshold:[/bold] {result['recommended_threshold']:.0%}")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 async def main():
@@ -148,9 +200,10 @@ async def main():
     load_p = sub.add_parser("load", help="Load knowledge base from files")
     load_p.add_argument("path", help="File or directory to load (.txt, .md)")
 
-    # stats/calibrate
-    sub.add_parser("stats", help="Show trade statistics")
-    sub.add_parser("calibrate", help="Run AI self-calibration")
+    # stats/calibrate/learn
+    sub.add_parser("stats",     help="Show trade statistics")
+    sub.add_parser("calibrate", help="Run AI self-calibration (DeepSeek R1)")
+    sub.add_parser("learn",     help="Extract lessons from resolved trades → save to knowledge base")
 
     args = parser.parse_args()
 
@@ -166,6 +219,10 @@ async def main():
 
     if args.cmd == "calibrate":
         await cmd_calibrate()
+        return
+
+    if args.cmd == "learn":
+        await cmd_learn()
         return
 
     # Default: run
