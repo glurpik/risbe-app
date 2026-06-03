@@ -30,6 +30,7 @@ from trading.polymarket import get_active_markets
 from trading.wallet import get_balance_matic, get_address
 from modes.confirm_mode import run_confirm_cycle
 from modes.auto_mode import run_auto_cycle
+from modes.risky_mode import run_risky_cycle
 
 console = Console()
 
@@ -50,7 +51,7 @@ def print_banner(auto_mode: bool):
 
 # ── One full cycle ─────────────────────────────────────────────────────────────
 
-async def run_cycle(auto_mode: bool):
+async def run_cycle(auto_mode: bool, risky_mode: bool = False):
     console.rule(f"[dim]{datetime.utcnow().strftime('%H:%M:%S UTC')} — New cycle[/dim]")
 
     # 1. Fetch news
@@ -125,11 +126,16 @@ async def run_cycle(auto_mode: bool):
     except Exception as e:
         console.print(f"[dim]Crypto scan skipped: {e}[/dim]")
 
-    # 7. Execute Polymarket signals
+    # 7. Execute Polymarket signals (conservative 90%)
     if auto_mode:
         await run_auto_cycle(signals)
     else:
         await run_confirm_cycle(signals)
+
+    # 8. Risky mode — 10% of balance (optional)
+    if risky_mode:
+        balance_usd = get_balance_matic() * 0.6  # rough MATIC→USD, replace with real price
+        await run_risky_cycle(signals, articles, balance_usd, auto=auto_mode)
 
 
 # ── Load knowledge base from files ────────────────────────────────────────────
@@ -210,8 +216,9 @@ async def main():
 
     # run command
     run_p = sub.add_parser("run", help="Start the trading loop")
-    run_p.add_argument("--auto", action="store_true", help="Enable autonomous mode (no confirmation)")
-    run_p.add_argument("--once", action="store_true", help="Run one cycle then exit")
+    run_p.add_argument("--auto",  action="store_true", help="Autonomous mode (no confirmation)")
+    run_p.add_argument("--risky", action="store_true", help="Enable risky mode: use 10% of balance on aggressive bets")
+    run_p.add_argument("--once",  action="store_true", help="Run one cycle then exit")
 
     # load command
     load_p = sub.add_parser("load", help="Load knowledge base from files")
@@ -249,8 +256,9 @@ async def main():
         return
 
     # Default: run
-    auto_mode = getattr(args, "auto", False) or config.AUTO_MODE
-    once = getattr(args, "once", False)
+    auto_mode  = getattr(args, "auto",  False) or config.AUTO_MODE
+    risky_mode = getattr(args, "risky", False) or config.RISKY_MODE
+    once       = getattr(args, "once",  False)
 
     print_banner(auto_mode)
 
@@ -265,7 +273,7 @@ async def main():
     console.print(f"Wallet: [dim]{wallet_addr}[/dim]  Balance: [yellow]{balance:.4f} MATIC[/yellow]\n")
 
     if once:
-        await run_cycle(auto_mode)
+        await run_cycle(auto_mode, risky_mode)
         return
 
     # Loop forever — pure asyncio, no schedule library
@@ -273,7 +281,7 @@ async def main():
     console.print(f"[dim]Running every {config.NEWS_INTERVAL_MIN} minutes. Ctrl+C to stop.[/dim]\n")
 
     while True:
-        await run_cycle(auto_mode)
+        await run_cycle(auto_mode, risky_mode)
         await asyncio.sleep(interval)
 
 
