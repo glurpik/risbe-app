@@ -4,6 +4,7 @@ import anthropic
 import json
 from config import ANTHROPIC_API_KEY
 from storage.db import get_calibration_stats, get_recent_trades
+from .analyzer import CALIBRATION_MODEL
 
 _client = None
 
@@ -27,7 +28,7 @@ async def calibrate() -> dict:
     trades_summary = json.dumps(trades, indent=2, default=str)
 
     response = client.messages.create(
-        model="claude-opus-4-8",
+        model=CALIBRATION_MODEL,
         max_tokens=512,
         system="""You are calibrating an AI trading bot. Analyze performance and suggest threshold adjustments.
 Output JSON: {"new_threshold": float, "reasoning": str, "pattern_notes": str}""",
