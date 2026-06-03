@@ -7,6 +7,7 @@ Modes: confirm (default) | auto
 import asyncio
 import argparse
 import sys
+import threading
 from pathlib import Path
 from datetime import datetime
 
@@ -172,6 +173,12 @@ async def main():
     once = getattr(args, "once", False)
 
     print_banner(auto_mode)
+
+    # Start dashboard in background thread
+    from dashboard import run as dashboard_run
+    t = threading.Thread(target=dashboard_run, daemon=True)
+    t.start()
+    console.print("[dim]Dashboard: http://localhost:8080[/dim]")
 
     wallet_addr = get_address()
     balance = get_balance_matic()
