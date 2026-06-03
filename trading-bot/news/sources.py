@@ -1,0 +1,61 @@
+"""50+ news sources: Russian independent media + international finance/politics."""
+
+SOURCES = [
+    # --- Russian independent media ---
+    {"name": "Meduza",          "url": "https://meduza.io/rss/all",                          "lang": "ru"},
+    {"name": "RBC",             "url": "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",  "lang": "ru"},
+    {"name": "Kommersant",      "url": "https://www.kommersant.ru/RSS/main.xml",             "lang": "ru"},
+    {"name": "Vedomosti",       "url": "https://www.vedomosti.ru/rss/articles",              "lang": "ru"},
+    {"name": "Lenta",           "url": "https://lenta.ru/rss/news",                          "lang": "ru"},
+    {"name": "Interfax",        "url": "https://www.interfax.ru/rss.asp",                    "lang": "ru"},
+    {"name": "TASS",            "url": "https://tass.ru/rss/v2.xml",                         "lang": "ru"},
+    {"name": "Fontanka",        "url": "https://www.fontanka.ru/fontanka.rss",               "lang": "ru"},
+    {"name": "iStories",        "url": "https://istories.media/feed/",                       "lang": "ru"},
+    {"name": "Mediazona",       "url": "https://zona.media/rss",                             "lang": "ru"},
+    {"name": "Kholod",          "url": "https://holod.media/feed/",                          "lang": "ru"},
+    {"name": "The Insider",     "url": "https://theins.ru/feed",                             "lang": "ru"},
+    {"name": "Republic",        "url": "https://republic.ru/rss/articles/",                  "lang": "ru"},
+    {"name": "Radio Svoboda",   "url": "https://www.svoboda.org/api/z-pqiqt-qt-t-omi/",     "lang": "ru"},
+    {"name": "BBC Russian",     "url": "https://feeds.bbci.co.uk/russian/rss.xml",           "lang": "ru"},
+    {"name": "DW Russian",      "url": "https://rss.dw.com/rdf/rss-ru-all",                 "lang": "ru"},
+    {"name": "Current Time",    "url": "https://www.currenttime.tv/api/epiqteit/epiqteit",  "lang": "ru"},
+    {"name": "Novaya Gazeta",   "url": "https://novayagazeta.ru/rss/all.xml",               "lang": "ru"},
+
+    # --- International news ---
+    {"name": "Reuters",         "url": "https://feeds.reuters.com/reuters/topNews",          "lang": "en"},
+    {"name": "Reuters Finance",  "url": "https://feeds.reuters.com/reuters/businessNews",    "lang": "en"},
+    {"name": "Bloomberg",       "url": "https://feeds.bloomberg.com/markets/news.rss",       "lang": "en"},
+    {"name": "FT",              "url": "https://www.ft.com/?format=rss",                     "lang": "en"},
+    {"name": "WSJ Markets",     "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",     "lang": "en"},
+    {"name": "The Guardian",    "url": "https://www.theguardian.com/world/rss",              "lang": "en"},
+    {"name": "The Economist",   "url": "https://www.economist.com/rss",                      "lang": "en"},
+    {"name": "AP News",         "url": "https://rsshub.app/apnews/topics/apf-topnews",       "lang": "en"},
+    {"name": "CNN",             "url": "http://rss.cnn.com/rss/cnn_topstories.rss",          "lang": "en"},
+    {"name": "BBC World",       "url": "http://feeds.bbci.co.uk/news/world/rss.xml",         "lang": "en"},
+    {"name": "Al Jazeera",      "url": "https://www.aljazeera.com/xml/rss/all.xml",          "lang": "en"},
+    {"name": "NYT",             "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "lang": "en"},
+    {"name": "WaPo",            "url": "https://feeds.washingtonpost.com/rss/world",         "lang": "en"},
+    {"name": "CNBC",            "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "lang": "en"},
+    {"name": "MarketWatch",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories", "lang": "en"},
+    {"name": "Politico",        "url": "https://www.politico.com/rss/politicopicks.xml",     "lang": "en"},
+    {"name": "Foreign Policy",  "url": "https://foreignpolicy.com/feed/",                   "lang": "en"},
+    {"name": "Axios",           "url": "https://api.axios.com/feed/",                        "lang": "en"},
+    {"name": "The Hill",        "url": "https://thehill.com/news/feed/",                     "lang": "en"},
+    {"name": "Kyiv Independent","url": "https://kyivindependent.com/rss/",                  "lang": "en"},
+    {"name": "Ukr Pravda",      "url": "https://www.pravda.com.ua/eng/rss/",                "lang": "en"},
+    {"name": "EUobserver",      "url": "https://euobserver.com/rss.xml",                     "lang": "en"},
+    {"name": "DW English",      "url": "https://rss.dw.com/rdf/rss-en-all",                 "lang": "en"},
+    {"name": "Spiegel",         "url": "https://www.spiegel.de/schlagzeilen/index.rss",      "lang": "en"},
+    {"name": "SCMP",            "url": "https://www.scmp.com/rss/91/feed",                   "lang": "en"},
+
+    # --- Crypto news ---
+    {"name": "CoinDesk",        "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",    "lang": "en"},
+    {"name": "CoinTelegraph",   "url": "https://cointelegraph.com/rss",                      "lang": "en"},
+    {"name": "The Block",       "url": "https://www.theblock.co/rss.xml",                    "lang": "en"},
+    {"name": "Decrypt",         "url": "https://decrypt.co/feed",                            "lang": "en"},
+    {"name": "Blockworks",      "url": "https://blockworks.co/feed",                         "lang": "en"},
+
+    # --- Prediction market specific ---
+    {"name": "Polymarket Blog", "url": "https://polymarket.com/blog/feed",                   "lang": "en"},
+    {"name": "Manifold Blog",   "url": "https://news.manifold.markets/feed",                 "lang": "en"},
+]
