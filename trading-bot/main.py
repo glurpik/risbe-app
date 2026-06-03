@@ -24,6 +24,8 @@ from ai.analyzer import analyze_market
 from ai.calibrator import calibrate
 from ai.market_filter import filter_market
 from ai.learning import log_decision, extract_lessons
+from ai.combo_signal import scan_crypto_signals
+from trading.bybit import get_price as bybit_price
 from trading.polymarket import get_active_markets
 from trading.wallet import get_balance_matic, get_address
 from modes.confirm_mode import run_confirm_cycle
@@ -70,8 +72,13 @@ async def run_cycle(auto_mode: bool):
             passed.append((m, f))
         else:
             skipped_count += 1
-            log_decision(m.id, m.question, False, None, None, None, None,
-                         m.yes_price, None, None, False, f.reason, [], False)
+            log_decision(
+                market_id=m.id, question=m.question, signal_generated=False,
+                side=None, confidence=None, base_rate=None, my_estimate=None,
+                market_price=m.yes_price, edge=None, reasoning=None,
+                filter_passed=False, filter_reason=f.reason,
+                news_headlines=[], trade_executed=False,
+            )
 
     console.print(
         f"[cyan]Markets:[/cyan] {len(passed)} passed filter, "
@@ -108,7 +115,17 @@ async def run_cycle(auto_mode: bool):
 
     console.print(f"[cyan]Signals:[/cyan] {len(signals)} actionable (skipped {len(passed)-len(signals)} low-edge)")
 
-    # 6. Execute
+    # 6. Crypto pattern scan (Bybit — runs in parallel with signal execution)
+    try:
+        crypto_signals = await scan_crypto_signals(articles)
+        if crypto_signals:
+            console.print(f"[magenta]Crypto patterns:[/magenta] {len(crypto_signals)} signal(s)")
+            for cs in crypto_signals:
+                console.print(f"  [bold]{cs.symbol}[/bold] {cs.timeframe} — {cs.summary()}")
+    except Exception as e:
+        console.print(f"[dim]Crypto scan skipped: {e}[/dim]")
+
+    # 7. Execute Polymarket signals
     if auto_mode:
         await run_auto_cycle(signals)
     else:
@@ -200,10 +217,11 @@ async def main():
     load_p = sub.add_parser("load", help="Load knowledge base from files")
     load_p.add_argument("path", help="File or directory to load (.txt, .md)")
 
-    # stats/calibrate/learn
+    # stats/calibrate/learn/seed
     sub.add_parser("stats",     help="Show trade statistics")
     sub.add_parser("calibrate", help="Run AI self-calibration (DeepSeek R1)")
     sub.add_parser("learn",     help="Extract lessons from resolved trades → save to knowledge base")
+    sub.add_parser("seed",      help="Seed knowledge base with base rates, pattern stats, Polymarket history")
 
     args = parser.parse_args()
 
@@ -223,6 +241,11 @@ async def main():
 
     if args.cmd == "learn":
         await cmd_learn()
+        return
+
+    if args.cmd == "seed":
+        from ai.seed_knowledge import seed_all
+        await seed_all()
         return
 
     # Default: run
@@ -245,18 +268,13 @@ async def main():
         await run_cycle(auto_mode)
         return
 
-    # Loop forever
-    import schedule, time
+    # Loop forever — pure asyncio, no schedule library
+    interval = config.NEWS_INTERVAL_MIN * 60
     console.print(f"[dim]Running every {config.NEWS_INTERVAL_MIN} minutes. Ctrl+C to stop.[/dim]\n")
-    asyncio.ensure_future(run_cycle(auto_mode))
-
-    schedule.every(config.NEWS_INTERVAL_MIN).minutes.do(
-        lambda: asyncio.ensure_future(run_cycle(auto_mode))
-    )
 
     while True:
-        schedule.run_pending()
-        await asyncio.sleep(30)
+        await run_cycle(auto_mode)
+        await asyncio.sleep(interval)
 
 
 if __name__ == "__main__":

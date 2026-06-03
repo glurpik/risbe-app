@@ -162,8 +162,10 @@ async def extract_lessons() -> dict:
     m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         return {"status": "parse_error"}
-
-    data = json.loads(m.group())
+    try:
+        data = json.loads(m.group())
+    except json.JSONDecodeError:
+        return {"status": "parse_error"}
     lessons = data.get("lessons", [])
 
     # Save lessons to ChromaDB so future analyses use them
