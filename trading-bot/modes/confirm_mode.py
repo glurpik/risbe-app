@@ -21,14 +21,17 @@ async def run_confirm_cycle(signals: list[TradingSignal]) -> list[dict]:
 
     for sig in signals:
         table = Table(show_header=False, box=None, padding=(0, 1))
-        table.add_row("[bold]Market[/bold]", sig.question)
-        table.add_row("[bold]Side[/bold]",   f"[green]{sig.side}[/green]" if sig.side == "YES" else f"[red]{sig.side}[/red]")
-        table.add_row("[bold]Confidence[/bold]", f"{sig.confidence:.0%}")
-        table.add_row("[bold]Reasoning[/bold]", sig.reasoning)
-        table.add_row("[bold]Sources[/bold]", ", ".join(sig.news_used[:3]))
+        table.add_row("[bold]Market[/bold]",     sig.question)
+        table.add_row("[bold]Side[/bold]",        f"[green]{sig.side}[/green]" if sig.side == "YES" else f"[red]{sig.side}[/red]")
+        table.add_row("[bold]Base rate[/bold]",   f"{sig.base_rate:.0%}")
+        table.add_row("[bold]My estimate[/bold]", f"{sig.my_estimate:.0%}")
+        table.add_row("[bold]Market price[/bold]",f"{sig.edge + sig.my_estimate - sig.edge:.0%}  →  edge [yellow]{sig.edge:.0%}[/yellow]")
+        table.add_row("[bold]Confidence[/bold]",  f"{sig.confidence:.0%}")
+        table.add_row("[bold]Reasoning[/bold]",   sig.reasoning)
+        table.add_row("[bold]Sources[/bold]",     ", ".join(sig.news_used[:3]))
         console.print(table)
 
-        if Confirm.ask(f"  [bold]Execute this trade?[/bold]", default=False):
+        if Confirm.ask("  [bold]Execute this trade?[/bold]", default=False):
             result = await execute_signal(sig)
             if result["status"] in ("ok", "mock"):
                 rprint(f"  [green]✓ Order placed — ${result['amount_usd']:.2f} on {result['side']}[/green]")

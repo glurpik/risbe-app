@@ -1,19 +1,31 @@
-"""Self-calibration: Claude reflects on past predictions and adjusts thresholds."""
+"""Self-calibration using DeepSeek R1 (reasoning model) — runs weekly."""
 
-import anthropic
 import json
-from config import ANTHROPIC_API_KEY
+import re
+from openai import OpenAI
+from config import DEEPSEEK_API_KEY
 from storage.db import get_calibration_stats, get_recent_trades
 from .analyzer import CALIBRATION_MODEL
 
 _client = None
 
 
-def _get_client() -> anthropic.Anthropic:
+def _get_client() -> OpenAI:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        _client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
     return _client
+
+
+CALIBRATION_SYSTEM = """You are a quant analyst reviewing an AI trading bot's performance.
+Your job: identify patterns in wins/losses and recommend threshold adjustments.
+
+Output JSON only:
+{
+  "new_threshold": float (0.55–0.90),
+  "reasoning": "what patterns you found",
+  "pattern_notes": "specific advice: e.g. 'avoid political markets', 'crypto signals are strong'"
+}"""
 
 
 async def calibrate() -> dict:
@@ -21,30 +33,28 @@ async def calibrate() -> dict:
     trades = await get_recent_trades(30)
 
     if stats["total"] < 5:
-        return {"action": "wait", "reason": "Not enough data yet (need 5+ resolved trades)"}
+        return {"action": "wait", "reason": "Need 5+ resolved trades to calibrate"}
 
     client = _get_client()
-
     trades_summary = json.dumps(trades, indent=2, default=str)
 
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=CALIBRATION_MODEL,
-        max_tokens=512,
-        system="""You are calibrating an AI trading bot. Analyze performance and suggest threshold adjustments.
-Output JSON: {"new_threshold": float, "reasoning": str, "pattern_notes": str}""",
-        messages=[{"role": "user", "content": f"""
-Bot stats: {json.dumps(stats)}
-Recent trades: {trades_summary}
-
-Current confidence_threshold to trade. Suggest new threshold (between 0.55 and 0.90).
-Output JSON only."""}],
+        max_tokens=1024,
+        messages=[
+            {"role": "system", "content": CALIBRATION_SYSTEM},
+            {"role": "user", "content": (
+                f"Performance stats: {json.dumps(stats)}\n\n"
+                f"Last 30 trades:\n{trades_summary}\n\n"
+                "Analyze and output JSON."
+            )},
+        ],
     )
 
-    raw = response.content[0].text
-    import re
+    raw = response.choices[0].message.content or ""
     m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
-        return {"action": "no_change", "reason": "Could not parse calibration output"}
+        return {"action": "no_change", "reason": "Could not parse output"}
 
     data = json.loads(m.group())
     return {

@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DEEPSEEK_API_KEY  = os.getenv("DEEPSEEK_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 POLYMARKET_API_KEY = os.getenv("POLYMARKET_API_KEY", "")
 POLYMARKET_SECRET = os.getenv("POLYMARKET_SECRET", "")
