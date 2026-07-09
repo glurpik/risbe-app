@@ -14,18 +14,22 @@ async function fetchJson(url, attempt = 1) {
 }
 
 // Активные бинарные рынки с достаточной ликвидностью.
-async function fetchActiveMarkets(limit) {
+// startOffset позволяет ротировать окно между вызовами: топ по объёму уже
+// разобран проф-ботами за секунды, длинный хвост менее заметных рынков —
+// более вероятное место для отстающего прайсинга.
+async function fetchActiveMarkets(limit, startOffset = 0) {
     const markets = [];
-    let offset = 0;
+    let offset = startOffset;
+    let sawEnd = false;
     while (markets.length < limit) {
-        const url = `${config.GAMMA_BASE}/markets?active=true&closed=false&limit=${config.MARKETS_PAGE_SIZE}&offset=${offset}&order=volume24hr&ascending=false`;
+        const url = `${config.GAMMA_BASE}/markets?active=true&closed=false&limit=${config.MARKETS_PAGE_SIZE}&offset=${offset}&order=id&ascending=true`;
         const page = await fetchJson(url);
-        if (!Array.isArray(page) || page.length === 0) break;
+        if (!Array.isArray(page) || page.length === 0) { sawEnd = true; break; }
         markets.push(...page);
         offset += page.length;
-        if (page.length < config.MARKETS_PAGE_SIZE) break;
+        if (page.length < config.MARKETS_PAGE_SIZE) { sawEnd = true; break; }
     }
-    return markets
+    const filtered = markets
         .filter((m) => {
             const liquidity = parseFloat(m.liquidityNum ?? m.liquidity ?? '0');
             let tokenIds = [];
@@ -37,6 +41,7 @@ async function fetchActiveMarkets(limit) {
             return liquidity >= config.MIN_LIQUIDITY_USD && tokenIds.length === 2 && !m.negRisk;
         })
         .slice(0, limit);
+    return { markets: filtered, nextOffset: sawEnd ? 0 : offset };
 }
 
 async function fetchOrderBook(tokenId) {

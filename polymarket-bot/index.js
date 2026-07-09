@@ -5,6 +5,7 @@ const db = require('./db');
 
 let bankroll = config.STARTING_BANKROLL;
 let running = true;
+let scanOffset = 0;
 
 function log(msg) {
     const ts = new Date().toISOString();
@@ -14,12 +15,14 @@ function log(msg) {
 async function scanOnce() {
     let markets;
     try {
-        markets = await fetchActiveMarkets(config.MAX_MARKETS_TRACKED);
+        const result = await fetchActiveMarkets(config.MAX_MARKETS_TRACKED, scanOffset);
+        markets = result.markets;
+        scanOffset = result.nextOffset;
     } catch (err) {
         log(`ERROR fetching markets: ${err.message}`);
         return;
     }
-    log(`Scanning ${markets.length} liquid binary markets...`);
+    log(`Scanning ${markets.length} liquid binary markets (offset ${scanOffset})...`);
 
     let found = 0;
     for (const m of markets) {
