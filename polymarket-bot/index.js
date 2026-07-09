@@ -20,6 +20,7 @@ async function scanOnce() {
         scanOffset = result.nextOffset;
     } catch (err) {
         log(`ERROR fetching markets: ${err.message}`);
+        scanOffset = 0; // скорее всего офсет вышел за пределы, которые отдаёт API — начинаем сначала
         return;
     }
     log(`Scanning ${markets.length} liquid binary markets (offset ${scanOffset})...`);
