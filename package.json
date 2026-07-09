@@ -1,9 +1,14 @@
 {
+  "name": "overnight-experiment",
+  "private": true,
+  "scripts": {
+    "bot:start": "node polymarket-bot/index.js",
+    "bot:stats": "node polymarket-bot/stats.js",
+    "tg:start": "node telegram-bot/bot.js"
+  },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "socket.io": "^4.8.3",
-    "sqlite3": "^5.1.7"
+    "dotenv": "^16.4.5",
+    "sqlite3": "^5.1.7",
+    "telegraf": "^4.16.3"
   }
 }
